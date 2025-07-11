@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   userData: Usuario | null;
+  register: (email: string, password: string, nome: string, tipoUsuario: 'motorista' | 'investidor') => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
@@ -66,6 +67,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (email: string, password: string, nome: string, tipoUsuario: 'motorista' | 'investidor') => {
+    setLoading(true);
+    try {
+      // 1. Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nome,
+            tipo_usuario: tipoUsuario
+          }
+        }
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('Erro ao criar usuário');
+      }
+
+      // 2. Criar perfil na tabela usuarios
+      const { error: usuarioError } = await supabase
+        .from('usuarios')
+        .insert({
+          id: authData.user.id,
+          nome,
+          email,
+          tipo_usuario: tipoUsuario
+        });
+
+      if (usuarioError) {
+        console.error('Erro ao criar perfil de usuário:', usuarioError);
+        // Não falhar aqui, pois o usuário já foi criado no Auth
+      }
+
+      // 3. Criar perfil específico (motorista ou investidor)
+      if (tipoUsuario === 'motorista') {
+        const { error: motoristaError } = await supabase
+          .from('motoristas')
+          .insert({
+            id: authData.user.id
+          });
+
+        if (motoristaError) {
+          console.error('Erro ao criar perfil de motorista:', motoristaError);
+        }
+      } else if (tipoUsuario === 'investidor') {
+        const { error: investidorError } = await supabase
+          .from('investidores')
+          .insert({
+            id: authData.user.id
+          });
+
+        if (investidorError) {
+          console.error('Erro ao criar perfil de investidor:', investidorError);
+        }
+      }
+
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Verifique seu email para confirmar a conta.",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Erro no cadastro",
+        description: error.message || "Erro ao criar conta. Tente novamente.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -83,9 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Bem-vindo ao CliqueAlugue.",
       });
     } catch (error: any) {
+      console.error('Erro de login:', error);
       toast({
         title: "Erro no login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
       throw error;
@@ -115,9 +195,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getErrorMessage = (error: any) => {
+    if (error.message?.includes('Invalid login credentials')) {
+      return "Email ou senha incorretos. Verifique suas credenciais.";
+    }
+    if (error.message?.includes('Email not confirmed')) {
+      return "Email não confirmado. Verifique sua caixa de entrada.";
+    }
+    if (error.message?.includes('User already registered')) {
+      return "Este email já está cadastrado. Tente fazer login.";
+    }
+    return error.message || "Erro desconhecido. Tente novamente.";
+  };
+
   const value = {
     user,
     userData,
+    register,
     login,
     logout,
     loading,
