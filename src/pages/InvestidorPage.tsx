@@ -19,113 +19,38 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar
 } from "recharts";
+import { useInvestidorData } from "@/hooks/useInvestidorData";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const InvestidorPage = () => {
-  // Mock data - substituir por dados reais da API
-  const kpiData = [
-    {
-      icon: Car,
-      title: "Carros na Frota",
-      value: "12",
-      trend: "up" as const,
-      trendValue: "+2",
-      subtitle: "2 novos este mês"
-    },
-    {
-      icon: DollarSign,
-      title: "Receita Mensal",
-      value: "R$ 8.750",
-      trend: "up" as const,
-      trendValue: "+15%",
-      subtitle: "Comparado ao mês anterior"
-    },
-    {
-      icon: TrendingUp,
-      title: "ROI Médio",
-      value: "12.5%",
-      trend: "up" as const,
-      trendValue: "+1.2%",
-      subtitle: "Retorno anual"
-    },
-    {
-      icon: Users,
-      title: "Motoristas Ativos",
-      value: "10",
-      trend: "neutral" as const,
-      subtitle: "De 12 carros"
-    }
-  ];
+  const { user } = useAuth();
+  const { investidor, veiculos, carrosAlugados, receitaMensal, kpiData, loading } = useInvestidorData();
 
-  const rentedCarsData = [
-    {
-      id: 1,
-      veiculo: "Toyota Corolla 2022",
-      placa: "ABC-1234",
-      motorista: "João Silva",
-      dataInicio: "01/12/2024",
-      dataTermino: "31/12/2024",
-      valor: "R$ 850,00",
-      status: "Ativo"
-    },
-    {
-      id: 2,
-      veiculo: "Honda Civic 2023",
-      placa: "DEF-5678",
-      motorista: "Maria Santos",
-      dataInicio: "15/12/2024",
-      dataTermino: "15/01/2025",
-      valor: "R$ 900,00",
-      status: "Ativo"
-    },
-    {
-      id: 3,
-      veiculo: "Hyundai HB20 2021",
-      placa: "GHI-9012",
-      motorista: "Carlos Oliveira",
-      dataInicio: "10/12/2024",
-      dataTermino: "10/01/2025",
-      valor: "R$ 750,00",
-      status: "Ativo"
-    },
-    {
-      id: 4,
-      veiculo: "Nissan Versa 2022",
-      placa: "JKL-3456",
-      motorista: "-",
-      dataInicio: "-",
-      dataTermino: "-",
-      valor: "R$ 800,00",
-      status: "Disponível"
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-semibold text-foreground mb-2">
+            Carregando dados...
+          </div>
+          <div className="text-muted-foreground">
+            Aguarde enquanto buscamos suas informações
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const revenueData = [
-    { mes: "Jan", receita: 7200 },
-    { mes: "Fev", receita: 7800 },
-    { mes: "Mar", receita: 8100 },
-    { mes: "Abr", receita: 7500 },
-    { mes: "Mai", receita: 8300 },
-    { mes: "Jun", receita: 8600 },
-    { mes: "Jul", receita: 8200 },
-    { mes: "Ago", receita: 8900 },
-    { mes: "Set", receita: 9100 },
-    { mes: "Out", receita: 8800 },
-    { mes: "Nov", receita: 9200 },
-    { mes: "Dez", receita: 8750 }
-  ];
+  const kpiDataWithIcons = kpiData.map((kpi, index) => ({
+    ...kpi,
+    icon: [Car, Users, DollarSign, TrendingUp][index]
+  }));
 
   const carsColumns = [
     {
       key: "veiculo",
       label: "Veículo",
-      sortable: true
-    },
-    {
-      key: "placa",
-      label: "Placa",
       sortable: true
     },
     {
@@ -189,7 +114,7 @@ export const InvestidorPage = () => {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {kpiData.map((kpi, index) => (
+          {kpiDataWithIcons.map((kpi, index) => (
             <KPICard key={index} {...kpi} />
           ))}
         </div>
@@ -208,7 +133,7 @@ export const InvestidorPage = () => {
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueData}>
+                <LineChart data={receitaMensal}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis 
                     dataKey="mes" 
@@ -228,7 +153,7 @@ export const InvestidorPage = () => {
                   />
                   <Line 
                     type="monotone" 
-                    dataKey="receita" 
+                    dataKey="valor" 
                     stroke="hsl(var(--primary))" 
                     strokeWidth={3}
                     dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
@@ -244,7 +169,7 @@ export const InvestidorPage = () => {
         <DataTable
           title="Frota de Veículos"
           columns={carsColumns}
-          data={rentedCarsData}
+          data={carrosAlugados}
           searchable={true}
           exportable={true}
         />

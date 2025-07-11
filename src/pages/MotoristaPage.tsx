@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { KPICard } from "@/components/KPICard";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
@@ -13,77 +12,32 @@ import {
   FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useMotoristaData } from "@/hooks/useMotoristaData";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const MotoristaPage = () => {
-  // Mock data - substituir por dados reais da API
-  const kpiData = [
-    {
-      icon: DollarSign,
-      title: "Ganhos este mês",
-      value: "R$ 4.250",
-      trend: "up" as const,
-      trendValue: "+12%",
-      subtitle: "Comparado ao mês anterior"
-    },
-    {
-      icon: Calendar,
-      title: "Dias trabalhados",
-      value: "22",
-      trend: "neutral" as const,
-      subtitle: "Neste mês"
-    },
-    {
-      icon: TrendingUp,
-      title: "Média diária",
-      value: "R$ 193",
-      trend: "up" as const,
-      trendValue: "+8%",
-      subtitle: "Últimos 30 dias"
-    },
-    {
-      icon: Clock,
-      title: "Horas rodadas",
-      value: "176h",
-      trend: "up" as const,
-      trendValue: "+5%",
-      subtitle: "Este mês"
-    }
-  ];
+  const { user } = useAuth();
+  const { motorista, veiculoAtual, pagamentos, kpiData, loading } = useMotoristaData();
 
-  const paymentsData = [
-    {
-      id: 1,
-      data: "15/12/2024",
-      valor: "R$ 850,00",
-      status: "Pago",
-      tipo: "Diária",
-      periodo: "01-15/12/2024"
-    },
-    {
-      id: 2,
-      data: "01/12/2024",
-      valor: "R$ 850,00",
-      status: "Pago",
-      tipo: "Diária",
-      periodo: "16-30/11/2024"
-    },
-    {
-      id: 3,
-      data: "15/11/2024",
-      valor: "R$ 825,00",
-      status: "Pago",
-      tipo: "Diária",
-      periodo: "01-15/11/2024"
-    },
-    {
-      id: 4,
-      data: "01/01/2025",
-      valor: "R$ 850,00",
-      status: "Pendente",
-      tipo: "Diária",
-      periodo: "16-31/12/2024"
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-semibold text-foreground mb-2">
+            Carregando dados...
+          </div>
+          <div className="text-muted-foreground">
+            Aguarde enquanto buscamos suas informações
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const kpiDataWithIcons = kpiData.map((kpi, index) => ({
+    ...kpi,
+    icon: [DollarSign, Calendar, TrendingUp, Clock][index]
+  }));
 
   const paymentColumns = [
     {
@@ -155,7 +109,7 @@ export const MotoristaPage = () => {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {kpiData.map((kpi, index) => (
+          {kpiDataWithIcons.map((kpi, index) => (
             <KPICard key={index} {...kpi} />
           ))}
         </div>
@@ -175,11 +129,15 @@ export const MotoristaPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Modelo</p>
-                <p className="text-foreground font-semibold">Toyota Corolla 2022</p>
+                <p className="text-foreground font-semibold">
+                  {veiculoAtual ? `${veiculoAtual.marca} ${veiculoAtual.modelo}` : 'Nenhum veículo ativo'}
+                </p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Placa</p>
-                <p className="text-foreground font-semibold">ABC-1234</p>
+                <p className="text-foreground font-semibold">
+                  {veiculoAtual?.placa || 'N/A'}
+                </p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
@@ -205,7 +163,7 @@ export const MotoristaPage = () => {
         <DataTable
           title="Histórico de Pagamentos"
           columns={paymentColumns}
-          data={paymentsData}
+          data={pagamentos}
           searchable={true}
           exportable={true}
         />

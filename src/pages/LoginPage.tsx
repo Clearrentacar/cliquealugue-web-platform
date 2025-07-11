@@ -5,15 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Car, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { login, loading: isLoading, userData } = useAuth();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,51 +27,26 @@ export const LoginPage = () => {
     e.preventDefault();
     
     if (!validateEmail(email)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, insira um email válido.",
-        variant: "destructive",
-      });
       return;
     }
 
     if (!validatePassword(password)) {
-      toast({
-        title: "Senha muito fraca",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
       return;
     }
 
-    setIsLoading(true);
-
-    // Simular login (substituir por integração real)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await login(email, password);
       
-      // Simular diferentes tipos de usuário baseado no email
-      if (email.includes("motorista")) {
-        navigate("/motorista");
-      } else if (email.includes("investidor")) {
-        navigate("/investidor");
-      } else {
-        // Default para motorista
-        navigate("/motorista");
-      }
-
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao CliqueAlugue.",
-      });
+      // Aguardar userData ser carregado para redirecionar corretamente
+      setTimeout(() => {
+        if (userData?.tipo_usuario === "investidor") {
+          navigate("/investidor");
+        } else {
+          navigate("/motorista");
+        }
+      }, 100);
     } catch (error) {
-      toast({
-        title: "Erro no login",
-        description: "Verifique suas credenciais e tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      // Erro já tratado no contexto
     }
   };
 
