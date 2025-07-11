@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { useToast } from "@/components/ui/use-toast";
 export const LoginPage = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -24,6 +25,7 @@ export const LoginPage = () => {
   
   const navigate = useNavigate();
   const { login, register, loading: isLoading, userData } = useAuth();
+  const { toast } = useToast();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,7 +59,13 @@ export const LoginPage = () => {
         }
       }, 100);
     } catch (error) {
-      // Erro já tratado no contexto
+      console.error("Login error:", error); // Log para depuração
+      toast({
+        title: "Erro no login",
+        description: "Verifique suas credenciais.",
+        variant: "destructive",
+      });
+
     }
   };
 

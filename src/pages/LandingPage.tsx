@@ -93,6 +93,10 @@ export const LandingPage = () => {
                 </Button>
               </a>
             </div>
+            {/* Adicionado link para o painel administrativo para teste */}
+            <div className="mt-4">
+              <Link to="/admin" className="text-white/80 hover:text-white underline">Painel Administrativo (Teste)</Link>
+            </div>
           </div>
         </div>
         

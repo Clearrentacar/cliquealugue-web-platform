@@ -9,7 +9,8 @@ import { LandingPage } from "@/pages/LandingPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MotoristaPage } from "@/pages/MotoristaPage";
 import { InvestidorPage } from "@/pages/InvestidorPage";
-import NotFound from "./pages/NotFound";
+import AdminInvestidores from "@/pages/AdminInvestidores";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
+          <Route path="/admin" element={<AdminInvestidores />} />
         </Routes>
         </BrowserRouter>
       </AuthProvider>
