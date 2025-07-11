@@ -149,7 +149,7 @@ export const LoginPage = () => {
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>📧 motorista@demo.com - Área do Motorista</p>
                 <p>📧 investidor@demo.com - Área do Investidor</p>
-                <p>🔒 Senha: qualquer senha com 6+ caracteres</p>
+                <p>🔒 Senha: demo123</p>
               </div>
             </div>
 
